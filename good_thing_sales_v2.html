@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good Thing — Daily Sales</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--g:#C0392B;--gl:#F5F3EF;--ink:#1A1814;--mu:#9A9690;--bg:#FAFAF8;--wh:#fff;--bd:#E8E4DC;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* ── Screens ── */
+.screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.screen.hidden{display:none;}
+.card{background:var(--wh);border:1px solid var(--bd);border-radius:20px;padding:2.8rem 2.5rem;width:400px;max-width:92vw;text-align:center;box-shadow:0 8px 40px rgba(192,57,43,.08);}
+.logo{font-family:'Cormorant Garamond',serif;font-size:2.4rem;color:var(--g);margin-bottom:.3rem;}
+.sub{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:2rem;font-weight:500;}
+.inp{width:100%;padding:.65rem 1rem;border:1px solid var(--bd);border-radius:10px;font-family:'Jost',sans-serif;font-size:.95rem;color:var(--ink);background:var(--bg);margin-bottom:1rem;outline:none;display:block;}
+.inp:focus{border-color:var(--g);}
+.btn-main{width:100%;padding:.75rem;background:var(--ink);color:#fff;border:none;border-radius:10px;font-family:'Jost',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;}
+.btn-main:hover{opacity:.88;}
+.err{font-size:.8rem;color:#e53935;margin-bottom:.8rem;min-height:1.2em;}
+.hint{font-size:.72rem;color:#aaa;margin-top:1.2rem;}
+.field-label{font-size:.65rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);display:block;text-align:left;margin-bottom:.35rem;}
+
+/* ── App ── */
+#app{display:none;}
+header{background:var(--ink);}
+.hi{max-width:1100px;margin:0 auto;padding:2.2rem 2rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.bw{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:#fff;line-height:1;letter-spacing:.04em;}
+.bw span{font-style:italic;opacity:.7;font-size:.88rem;display:block;font-family:'Jost',sans-serif;font-weight:300;margin-bottom:.3rem;letter-spacing:.12em;}
+.hm{text-align:right;color:rgba(255,255,255,.7);font-size:.78rem;line-height:1.9;}
+.hm strong{color:#fff;font-weight:500;font-size:1.35rem;display:block;}
+.so-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.65);border-radius:6px;padding:4px 12px;font-family:'Jost',sans-serif;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:.4rem;}
+.so-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+nav{background:var(--wh);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.05);}
+.ni{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;flex-wrap:wrap;}
+.tb{padding:.85rem 1.3rem;font-family:'Jost',sans-serif;font-size:.84rem;font-weight:500;color:var(--mu);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.tb.a{color:var(--g);border-bottom-color:var(--g);}
+.tb:hover:not(.a){color:var(--ink);}
+main{max-width:1100px;margin:0 auto;padding:2rem;}
+.ts{display:none;}.ts.a{display:block;}
+
+/* ── Stats ── */
+.sg{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+.sc{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.2rem 1.4rem;}
+.sl{font-size:.68rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:.4rem;}
+.sv{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--ink);line-height:1;}
+.sv.ac{color:var(--g);}
+.sh{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--ink);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;}
+.sh::after{content:"";flex:1;height:1px;background:var(--bd);}
+.cc{background:var(--wh);border:1px solid var(--bd);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+
+/* ── Table ── */
+.tw{overflow-x:auto;margin-bottom:2rem;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+thead th{background:var(--ink);color:#fff;font-weight:500;padding:.7rem 1rem;text-align:left;font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;}
+thead th:first-child{border-radius:10px 0 0 0;}thead th:last-child{border-radius:0 10px 0 0;}
+tbody tr{border-bottom:1px solid var(--bd);}
+tbody tr:hover td{background:var(--gl);}
+tbody tr:nth-child(even) td{background:#FAFAF8;}
+tbody tr:nth-child(even):hover td{background:var(--gl);}
+tbody td{padding:.65rem 1rem;color:var(--ink);vertical-align:middle;}
+.tr2 td{background:var(--ink)!important;color:#fff!important;font-weight:500;}
+.mo{font-variant-numeric:tabular-nums;text-align:right;}
+
+/* ── Filter ── */
+.fi{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:.3rem;}
+.fl{font-size:.67rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);}
+.fg select{padding:.45rem .8rem;border:1px solid var(--bd);border-radius:8px;font-family:'Jost',sans-serif;font-size:.84rem;color:var(--ink);background:var(--wh);}
+
+/* ── Entry form ── */
+.ef{background:var(--wh);border:1px dashed var(--g);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+.ef h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:1.2rem;color:var(--g);}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.8rem;}
+.fgrow{display:flex;flex-direction:column;gap:.3rem;}
+.fgrow label{font-size:.67rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);}
+.fgrow input{padding:.5rem .75rem;border:1px solid var(--bd);border-radius:8px;font-family:'Jost',sans-serif;font-size:.87rem;color:var(--ink);background:var(--bg);}
+.fgrow input:focus{outline:2px solid var(--g);border-color:transparent;}
+.epv{margin-top:1rem;padding:.8rem 1rem;background:var(--gl);border-radius:8px;font-size:.84rem;color:var(--g);}
+.emsg{margin-top:.8rem;font-size:.8rem;padding:.6rem 1rem;border-radius:8px;}
+.emsg.ok{color:#2e7d32;background:#f1f8f1;border-left:3px solid #2e7d32;}
+.emsg.info{color:var(--ink);background:var(--gl);border-left:3px solid var(--ink);}
+.emsg.err{color:#e53935;background:#fff5f5;border-left:3px solid #e53935;}
+.ea{display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap;}
+.sbtn{padding:.6rem 1.6rem;background:var(--g);color:#fff;border:none;border-radius:8px;font-family:'Jost',sans-serif;font-size:.87rem;font-weight:500;cursor:pointer;}
+.sbtn:hover{opacity:.85;}
+.sbtn.dk{background:var(--ink);}
+.db{background:none;border:none;color:#ccc;cursor:pointer;font-size:.75rem;padding:3px 7px;border-radius:5px;}
+.db:hover{color:#e53935;background:#fee;}
+.ubadge{display:inline-block;padding:2px 10px;border-radius:20px;background:rgba(192,57,43,.1);color:var(--g);font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;}
+
+/* ── Loader ── */
+.loader{text-align:center;padding:3rem;font-size:.82rem;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;}
+
+@media(max-width:700px){.sg{grid-template-columns:1fr 1fr;}.hi{padding:1.5rem 1rem;}main{padding:1rem;}.ni{padding:0 1rem;}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" class="screen hidden">
+  <div class="card">
+    <div class="logo">Good Thing</div>
+    <div class="sub">Daily Sales &mdash; Partners Access</div>
+    <input class="inp" id="lpw" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="err" id="lerr"></div>
+    <button class="btn-main" onclick="doLogin()">Enter</button>
+    <div class="hint">Contact Omar if you need access.</div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app">
+  <header>
+    <div class="hi">
+      <div class="bw"><span>Daily Sales Report</span>Good Thing</div>
+      <div class="hm" id="hm"></div>
+    </div>
+  </header>
+  <nav>
+    <div class="ni">
+      <button class="tb a" onclick="swTab('overview',this)">Overview</button>
+      <button class="tb" onclick="swTab('daily',this)">Daily Log</button>
+      <button class="tb" onclick="swTab('monthly',this)">Monthly</button>
+      <button class="tb" onclick="swTab('entry',this)">+ Log Today</button>
+    </div>
+  </nav>
+  <main>
+    <div id="t-overview" class="ts a"></div>
+    <div id="t-daily" class="ts"></div>
+    <div id="t-monthly" class="ts"></div>
+    <div id="t-entry" class="ts"></div>
+  </main>
+</div>
+
+<script>
+// ── Users (password → Supabase credentials) ──
+var USERS = {
+  'khaled2026': { email: 'khaled@goodthing.com', name: 'Khaled' },
+  'omar2026':   { email: 'omar@goodthing.com',   name: 'Omar'   },
+  'joelle2026': { email: 'joelle@goodthing.com', name: 'Joelle' }
+};
+
+var sb = null;
+var D  = [];
+var currentUser = null;
+
+// ── Init ──
+window.onload = function() {
+  var SUPABASE_URL = 'https://skgwffqcejardjebbpys.supabase.co';
+  var ANON_KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrZ3dmZnFjZWphcmRqZWJicHlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNTg0ODIsImV4cCI6MjA5MTkzNDQ4Mn0.4VS2q1swAaEC_FSISzvnMsbZnyRgm06sAh2Ttot3fEk';
+  sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false } });
+  // Check if already logged in this session
+  var saved = sessionStorage.getItem('gt_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    startApp();
+  } else {
+    show('login-screen');
+  }
+};
+
+// ── Login — local password check only, no Supabase auth call ──
+async function doLogin() {
+  var pw   = document.getElementById('lpw').value.trim();
+  var user = USERS[pw];
+  if (!user) {
+    document.getElementById('lerr').textContent = 'Incorrect password.';
+    document.getElementById('lpw').value = '';
+    return;
+  }
+  currentUser = user;
+  sessionStorage.setItem('gt_user', JSON.stringify(user));
+  startApp();
+}
+
+function signOut() {
+  sessionStorage.removeItem('gt_user');
+  location.reload();
+}
+
+// ── Start app ──
+async function startApp() {
+  hide('login-screen');
+  document.getElementById('app').style.display = 'block';
+  await loadData();
+  go();
+}
+
+// ── Data ──
+async function loadData() {
+  var r = await sb.from('sales').select('*').order('date', { ascending: true });
+  if (r.error) {
+    console.error('loadData error:', r.error);
+    alert('Could not load sales data: ' + r.error.message);
+    return;
+  }
+  D = r.data || [];
+  console.log('Loaded', D.length, 'records');
+}
+
+async function upsertEntry(entry) {
+  await sb.from('sales').upsert(entry, { onConflict: 'date' });
+  await loadData();
+}
+
+async function deleteEntry(date) {
+  await sb.from('sales').delete().eq('date', date);
+  await loadData();
+}
+
+// ── Helpers ──
+function show(id) { var el=document.getElementById(id); if(el) el.classList.remove('hidden'); }
+function hide(id) { var el=document.getElementById(id); if(el) el.classList.add('hidden'); }
+function fd(n)  { if (!n && n !== 0) return '-'; return '$' + Math.round(n).toLocaleString(); }
+function fl(n)  { if (!n) return '-'; return (n/1000000).toFixed(1) + 'M LL'; }
+function fdt(d) { var dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fm(d)  { var dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-GB',{month:'long',year:'numeric'}); }
+function gm(d)  { return d.slice(0,7); }
+function gu(e)  { return e.total_usd || ((e.ccm||0)+(e.cash||0)) || 0; }
+function vr()   { return D.filter(function(e){return e.total_sales||e.ccm||e.cash||e.customers;}); }
+
+// ── Tab switch ──
+function swTab(n, b) {
+  document.querySelectorAll('.ts').forEach(function(s){ s.classList.remove('a'); });
+  document.querySelectorAll('.tb').forEach(function(x){ x.classList.remove('a'); });
+  document.getElementById('t-'+n).classList.add('a');
+  if (b) b.classList.add('a');
+}
+
+// ── Render all ──
+function go() { rOv(); rDa(); rMo(); rEn(); rHd(); }
+
+// ── Header ──
+function rHd() {
+  var rows=vr(), tm=gm(new Date().toISOString().slice(0,10));
+  var mr=rows.filter(function(e){return gm(e.date)===tm;});
+  var mu=mr.reduce(function(s,e){return s+gu(e);},0);
+  var name = currentUser ? currentUser.name : 'Partner';
+  document.getElementById('hm').innerHTML =
+    '<strong>'+fd(mu)+'<\/strong> this month &nbsp;&middot;&nbsp; '+mr.length+' days logged<br>'
+    +'<span class="ubadge">'+name+'<\/span>&nbsp;&nbsp;'
+    +'<button class="so-btn" onclick="signOut()">Sign out<\/button>';
+}
+
+// ── Overview ──
+function rOv() {
+  var rows=vr(), tm=gm(new Date().toISOString().slice(0,10));
+  var lmD=new Date(); lmD.setMonth(lmD.getMonth()-1);
+  var lm=gm(lmD.toISOString().slice(0,10));
+  var mr=rows.filter(function(e){return gm(e.date)===tm;});
+  var lr=rows.filter(function(e){return gm(e.date)===lm;});
+  var mu=mr.reduce(function(s,e){return s+gu(e);},0);
+  var lu=lr.reduce(function(s,e){return s+gu(e);},0);
+  var mc=mr.reduce(function(s,e){return s+(e.customers||0);},0);
+  var ac=mc>0?(mu/mc):0;
+  // All-time totals
+  var tu=rows.reduce(function(s,e){return s+gu(e);},0);
+  var tc=rows.reduce(function(s,e){return s+(e.customers||0);},0);
+  var l30=rows.slice(-30);
+  var rec=rows.slice(-10).slice().reverse().map(function(e){
+    var u=gu(e), av=(e.customers&&u)?('$'+(u/e.customers).toFixed(0)):'-';
+    return '<tr><td>'+fdt(e.date)+'<\/td><td>'+fl(e.total_sales)+'<\/td>'
+      +'<td class="mo">'+(e.ccm!=null?'$'+e.ccm:'-')+'<\/td>'
+      +'<td class="mo">'+(e.cash!=null?'$'+e.cash:'-')+'<\/td>'
+      +'<td class="mo" style="font-weight:500;color:var(--g)">'+(u>0?fd(u):'-')+'<\/td>'
+      +'<td class="mo">'+(e.customers||'-')+'<\/td>'
+      +'<td class="mo">'+av+'<\/td><\/tr>';
+  }).join('');
+  var noMonth = mr.length===0 ? '<div style="font-size:.78rem;color:var(--mu);margin-bottom:1.5rem;padding:.8rem 1rem;background:var(--wh);border:1px solid var(--bd);border-radius:10px;">No entries yet for this month — use <strong>+ Log Today</strong> to add the first one.</div>' : '';
+  document.getElementById('t-overview').innerHTML =
+    noMonth
+    +'<div class="sg">'
+    +'<div class="sc"><div class="sl">This Month USD<\/div><div class="sv ac">'+fd(mu)+'<\/div><div style="font-size:.68rem;color:var(--mu);margin-top:.2rem">'+mr.length+' days<\/div><\/div>'
+    +'<div class="sc"><div class="sl">Last Month USD<\/div><div class="sv">'+fd(lu)+'<\/div><\/div>'
+    +'<div class="sc"><div class="sl">All-Time USD<\/div><div class="sv">'+fd(tu)+'<\/div><\/div>'
+    +'<div class="sc"><div class="sl">All-Time Customers<\/div><div class="sv">'+tc.toLocaleString()+'<\/div><\/div>'
+    +'<div class="sc"><div class="sl">Days Logged<\/div><div class="sv">'+rows.length+'<\/div><\/div>'
+    +'<\/div>'
+    +'<div class="sh">Last 30 Entries<\/div>'
+    +'<div class="cc"><canvas id="cm" height="90"><\/canvas><\/div>'
+    +'<div class="sh">Recent Entries<\/div>'
+    +'<div class="tw"><table>'
+    +'<thead><tr><th>Date<\/th><th>LBP Total<\/th><th>CCM USD<\/th><th>Cash USD<\/th><th>Total USD<\/th><th>Customers<\/th><th>Avg Check<\/th><\/tr><\/thead>'
+    +'<tbody>'+rec+'<\/tbody><\/table><\/div>';
+  setTimeout(function(){
+    var c=document.getElementById('cm'); if(!c)return;
+    new Chart(c,{type:'bar',data:{
+      labels:l30.map(function(e){return fdt(e.date).slice(0,6);}),
+      datasets:[{data:l30.map(function(e){return gu(e);}),backgroundColor:'rgba(192,57,43,0.12)',borderColor:'#C0392B',borderWidth:1.5,borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
+              y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:function(v){return'$'+Math.round(v).toLocaleString();},font:{size:10}}}}}});
+  },100);
+}
+
+// ── Daily Log ──
+function rDa() {
+  var rows=vr().slice().reverse();
+  var months=[]; rows.forEach(function(e){var m=gm(e.date);if(months.indexOf(m)<0)months.push(m);});
+  var opts=months.map(function(m){return'<option value="'+m+'">'+fm(m+'-01')+'<\/option>';}).join('');
+  document.getElementById('t-daily').innerHTML =
+    '<div class="fi"><div class="fg"><span class="fl">Month<\/span>'
+    +'<select id="fm2" onchange="fDa()"><option value="">All months<\/option>'+opts+'<\/select><\/div><\/div>'
+    +'<div class="sh">Daily Sales Log<\/div><div id="dtw"><\/div>';
+  fDa();
+}
+
+function fDa() {
+  var sel=document.getElementById('fm2'), month=sel?sel.value:'';
+  var rows=vr().slice().reverse();
+  if(month) rows=rows.filter(function(e){return gm(e.date)===month;});
+  var tu=rows.reduce(function(s,e){return s+gu(e);},0);
+  var tc=rows.reduce(function(s,e){return s+(e.customers||0);},0);
+  var tb=rows.map(function(e){
+    var u=gu(e), av=(e.customers&&u)?('$'+(u/e.customers).toFixed(0)):'-';
+    return '<tr><td>'+fdt(e.date)+'<\/td><td>'+fl(e.total_sales)+'<\/td>'
+      +'<td class="mo">'+(e.ccm!=null?'$'+e.ccm:'-')+'<\/td>'
+      +'<td class="mo">'+(e.cash!=null?'$'+e.cash:'-')+'<\/td>'
+      +'<td class="mo" style="font-weight:500;color:var(--g)">'+(u>0?fd(u):'-')+'<\/td>'
+      +'<td class="mo">'+(e.customers||'-')+'<\/td>'
+      +'<td class="mo">'+av+'<\/td>'
+      +'<td><button class="db" onclick="delE(\''+e.date+'\')">&#x2715;<\/button><\/td><\/tr>';
+  }).join('');
+  var w=document.getElementById('dtw');
+  if(w) w.innerHTML='<div class="tw"><table>'
+    +'<thead><tr><th>Date<\/th><th>LBP Total<\/th><th>CCM USD<\/th><th>Cash USD<\/th><th>Total USD<\/th><th>Customers<\/th><th>Avg Check<\/th><th><\/th><\/tr><\/thead>'
+    +'<tbody>'+tb
+    +'<tr class="tr2"><td colspan="4">Total<\/td><td class="mo">'+fd(tu)+'<\/td><td class="mo">'+tc.toLocaleString()+'<\/td><td><\/td><td><\/td><\/tr>'
+    +'<\/tbody><\/table><\/div>';
+}
+
+async function delE(date) {
+  if(!confirm('Delete entry for '+fdt(date)+'?')) return;
+  await deleteEntry(date);
+  go();
+}
+
+// ── Monthly ──
+function rMo() {
+  var rows=vr(), bm={};
+  rows.forEach(function(e){
+    var m=gm(e.date); if(!bm[m])bm[m]={u:0,ca:0,cc:0,cu:0,d:0};
+    var u=gu(e); bm[m].u+=u; bm[m].ca+=(e.cash||0); bm[m].cc+=(e.ccm||0);
+    bm[m].cu+=(e.customers||0); if(u>0)bm[m].d++;
+  });
+  var months=Object.keys(bm).sort().reverse();
+  var tb=months.map(function(m){
+    var d=bm[m], av=d.d>0?('$'+(d.u/d.d).toFixed(0)):'-', ch=d.cu>0?('$'+(d.u/d.cu).toFixed(0)):'-';
+    return '<tr><td style="font-weight:500">'+fm(m+'-01')+'<\/td>'
+      +'<td class="mo" style="color:var(--g);font-weight:500">'+fd(d.u)+'<\/td>'
+      +'<td class="mo">'+fd(d.cc)+'<\/td><td class="mo">'+fd(d.ca)+'<\/td>'
+      +'<td class="mo">'+d.cu.toLocaleString()+'<\/td>'
+      +'<td class="mo">'+av+'<\/td><td class="mo">'+ch+'<\/td><\/tr>';
+  }).join('');
+  document.getElementById('t-monthly').innerHTML =
+    '<div class="sh">Monthly Summary<\/div>'
+    +'<div class="cc"><canvas id="cmo" height="80"><\/canvas><\/div>'
+    +'<div class="tw"><table>'
+    +'<thead><tr><th>Month<\/th><th>Total USD<\/th><th>CCM<\/th><th>Cash<\/th><th>Customers<\/th><th>Avg\/Day<\/th><th>Avg Check<\/th><\/tr><\/thead>'
+    +'<tbody>'+tb+'<\/tbody><\/table><\/div>';
+  setTimeout(function(){
+    var c=document.getElementById('cmo'); if(!c)return;
+    var mths=Object.keys(bm).sort().slice(-12);
+    new Chart(c,{type:'bar',data:{
+      labels:mths.map(function(m){return new Date(m+'-01').toLocaleDateString('en-GB',{month:'short',year:'2-digit'});}),
+      datasets:[{data:mths.map(function(m){return bm[m].u;}),backgroundColor:'rgba(192,57,43,0.12)',borderColor:'#C0392B',borderWidth:1.5,borderRadius:5}]
+    },options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
+              y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:function(v){return'$'+Math.round(v).toLocaleString();},font:{size:10}}}}}});
+  },100);
+}
+
+// ── Entry Form ──
+function rEn(overrideDate, msg, msgType) {
+  var date = overrideDate || new Date().toISOString().slice(0,10);
+  var ex   = D.find(function(e){return e.date===date;}) || null;
+  var msgHtml = msg
+    ? '<div class="emsg '+(msgType||'info')+'">'+msg+'<\/div>'
+    : (ex ? '<div class="emsg info">Existing entry loaded — edit and save to update.<\/div>' : '');
+  document.getElementById('t-entry').innerHTML =
+    '<div class="ef"><h3>Log Daily Sales<\/h3>'
+    +msgHtml
+    +'<div class="fgrid">'
+    +'<div class="fgrow"><label>Date<\/label><input id="ed" type="date" value="'+date+'" onchange="onDateChange()"><\/div>'
+    +'<div class="fgrow"><label>Total Sales LBP<\/label><input id="el" type="number" placeholder="e.g. 150000000" value="'+(ex&&ex.total_sales!=null?ex.total_sales:'')+'"><\/div>'
+    +'<div class="fgrow"><label>CCM USD<\/label><input id="ec" type="number" step="0.01" placeholder="e.g. 850" value="'+(ex&&ex.ccm!=null?ex.ccm:'')+'" oninput="upPv()"><\/div>'
+    +'<div class="fgrow"><label>Cash USD<\/label><input id="eca" type="number" step="0.01" placeholder="e.g. 1200" value="'+(ex&&ex.cash!=null?ex.cash:'')+'" oninput="upPv()"><\/div>'
+    +'<div class="fgrow"><label>Customers<\/label><input id="ecu" type="number" placeholder="e.g. 65" value="'+(ex&&ex.customers!=null?ex.customers:'')+'"><\/div>'
+    +'<\/div>'
+    +'<div id="epv" style="display:none" class="epv"><\/div>'
+    +'<div class="ea">'
+    +'<button class="sbtn" onclick="svEn()">Save Entry<\/button>'
+    +'<button class="sbtn dk" onclick="eodEn()">End of Day &rarr;<\/button>'
+    +'<\/div>'
+    +'<\/div>';
+  upPv();
+}
+
+function onDateChange() {
+  var date = document.getElementById('ed').value;
+  var ex   = D.find(function(e){return e.date===date;}) || null;
+  if(ex){
+    var el=document.getElementById('el'), ec=document.getElementById('ec'),
+        eca=document.getElementById('eca'), ecu=document.getElementById('ecu');
+    if(el)  el.value  = ex.total_sales!=null ? ex.total_sales : '';
+    if(ec)  ec.value  = ex.ccm!=null  ? ex.ccm  : '';
+    if(eca) eca.value = ex.cash!=null ? ex.cash : '';
+    if(ecu) ecu.value = ex.customers!=null ? ex.customers : '';
+  }
+  upPv();
+}
+
+function upPv() {
+  var c=parseFloat(document.getElementById('ec')&&document.getElementById('ec').value)||0;
+  var ca=parseFloat(document.getElementById('eca')&&document.getElementById('eca').value)||0;
+  var t=c+ca, pv=document.getElementById('epv');
+  if(pv){ if(t>0){pv.style.display='block';pv.textContent='Total USD: $'+t.toLocaleString();}else pv.style.display='none'; }
+}
+
+function buildEntry() {
+  var date=document.getElementById('ed').value;
+  var c=parseFloat(document.getElementById('ec').value)||0;
+  var ca=parseFloat(document.getElementById('eca').value)||0;
+  return {
+    date: date,
+    total_sales: parseFloat(document.getElementById('el').value)||null,
+    ccm:  c||null, cash: ca||null,
+    customers: parseInt(document.getElementById('ecu').value)||null,
+    total_usd: (c+ca)||null
+  };
+}
+
+async function svEn() {
+  var date=document.getElementById('ed').value;
+  if(!date){alert('Please select a date.');return;}
+  var entry=buildEntry();
+  await upsertEntry(entry);
+  rHd();
+  rEn(date, '\u2713 Saved for '+fdt(date), 'ok');
+}
+
+async function eodEn() {
+  var date=document.getElementById('ed').value;
+  if(!date){alert('Please select a date.');return;}
+  var closed=date;
+  await upsertEntry(buildEntry());
+  rHd(); rDa(); rMo();
+  var nd=new Date(date+'T00:00:00'); nd.setDate(nd.getDate()+1);
+  var ns=nd.toISOString().slice(0,10);
+  rEn(ns, '\u2713 Day closed for '+fdt(closed)+'. Ready for '+fdt(ns)+'.', 'ok');
+}
+</script>
+</body>
+</html>
