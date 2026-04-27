@@ -449,11 +449,37 @@ async function eodEn() {
   var date=document.getElementById('ed').value;
   if(!date){alert('Please select a date.');return;}
   var closed=date;
-  await upsertEntry(buildEntry());
+  var entry=buildEntry();
+  await upsertEntry(entry);
   rHd(); rDa(); rMo();
   var nd=new Date(date+'T00:00:00'); nd.setDate(nd.getDate()+1);
   var ns=nd.toISOString().slice(0,10);
   rEn(ns, '\u2713 Day closed for '+fdt(closed)+'. Ready for '+fdt(ns)+'.', 'ok');
+  // Send Pushover notification
+  sendEodNotification(entry);
+}
+
+async function sendEodNotification(entry) {
+  var ccm   = entry.ccm   ? '$'+entry.ccm   : '-';
+  var cash  = entry.cash  ? '$'+entry.cash  : '-';
+  var total = (entry.ccm||0)+(entry.cash||0);
+  var msg   = 'Good Thing \u2014 End of Day\n'
+            + 'Date: '+fdt(entry.date)+'\n'
+            + 'LBP Total: '+fl(entry.total_sales)+'\n'
+            + 'CCM: '+ccm+'\n'
+            + 'Cash: '+cash+'\n'
+            + 'Total USD: '+(total>0?'$'+total.toLocaleString():'-')+'\n'
+            + 'Customers: '+(entry.customers||'-');
+  try {
+    await fetch('https://api.pushover.net/1/messages.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'token=af9qovfyxsy9a497snhcx26sx2xnmo'
+          + '&user=u75wnfx6sj5we856q4n848qevbrbso'
+          + '&title=Good+Thing+%E2%80%94+End+of+Day'
+          + '&message='+encodeURIComponent(msg)
+    });
+  } catch(e) { console.warn('Pushover notification failed:', e); }
 }
 </script>
 </body>
