@@ -445,9 +445,14 @@ async function svEn() {
   rEn(date, '\u2713 Saved for '+fdt(date), 'ok');
 }
 
+var eodBusy = false;
 async function eodEn() {
+  if(eodBusy) return;
+  eodBusy = true;
+  var btn = document.querySelector('.sbtn.dk');
+  if(btn){ btn.disabled=true; btn.textContent='Saving\u2026'; }
   var date=document.getElementById('ed').value;
-  if(!date){alert('Please select a date.');return;}
+  if(!date){ eodBusy=false; if(btn){btn.disabled=false;btn.textContent='End of Day \u2192';} alert('Please select a date.');return;}
   var closed=date;
   var entry=buildEntry();
   await upsertEntry(entry);
@@ -455,8 +460,8 @@ async function eodEn() {
   var nd=new Date(date+'T00:00:00'); nd.setDate(nd.getDate()+1);
   var ns=nd.toISOString().slice(0,10);
   rEn(ns, '\u2713 Day closed for '+fdt(closed)+'. Ready for '+fdt(ns)+'.', 'ok');
-  // Send Pushover notification
   sendEodNotification(entry);
+  eodBusy = false;
 }
 
 async function sendEodNotification(entry) {
