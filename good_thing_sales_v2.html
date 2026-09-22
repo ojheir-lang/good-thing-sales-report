@@ -477,12 +477,13 @@ async function sendEodNotification(entry) {
             + 'Total USD: '+(total>0?'$'+total.toLocaleString():'-')+'\n'
             + 'Customers: '+(entry.customers||'-');
   try {
-    await fetch('https://7107.api.greenapi.com/waInstance7107637898/sendMessage/0d5a866f109941f0bc8fb46cc4d7ae8b684b6b9096d8460d8a', {
+    var res = await fetch('https://7107.api.greenapi.com/waInstance7107637898/sendMessage/0d5a866f109941f0bc8fb46cc4d7ae8b684b6b9096d8460d8a', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chatId: '120363428492758061@g.us', message: msg })
     });
-  } catch(e) { console.warn('WhatsApp notification failed:', e); }
+    if (!res.ok) alert('WhatsApp error: ' + res.status + ' ' + await res.text());
+  } catch(e) { alert('WhatsApp failed: ' + e.message); }
 }
 </script>
 </body>
